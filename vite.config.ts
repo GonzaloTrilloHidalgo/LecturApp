@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'LecturApp',
         short_name: 'LecturApp',
-        start_url: '/',
+        start_url: '/LecturApp/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#4f46e5',
