@@ -3,6 +3,7 @@ import './App.css'
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Modal from './Modal'
+import StarRating from './StarRating'
 
 // Tipos
 type Libro = {
@@ -11,6 +12,9 @@ type Libro = {
   autor: string
   estado: string
   notas?: string
+  fecha_inicio?: string | null
+  fecha_fin?: string | null
+  valoracion?: number
 }
 
 function Formulario({
@@ -18,7 +22,7 @@ function Formulario({
 }: {
   onLibroAgregado: () => void
 }) {
-  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', autor: '', estado: 'por leer', notas: '' })
+  const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', autor: '', estado: 'por leer', notas: '', fecha_inicio: '', fecha_fin: '', valoracion: 0 })
 
   const agregarLibro = async () => {
     if (!nuevoLibro.titulo || !nuevoLibro.autor) {
@@ -30,7 +34,7 @@ function Formulario({
     if (error) {
       console.error('Error al insertar:', error)
     } else {
-      setNuevoLibro({ titulo: '', autor: '', estado: 'por leer', notas: '' })
+      setNuevoLibro({ titulo: '', autor: '', estado: 'por leer', notas: '', fecha_inicio: '', fecha_fin: '', valoracion: 0 })
       onLibroAgregado()
     }
   }
@@ -66,6 +70,25 @@ function Formulario({
           value={nuevoLibro.notas}
           onChange={e => setNuevoLibro({ ...nuevoLibro, notas: e.target.value })}
         />
+        <label className="label">
+          Fecha de inicio
+          <input
+            type="date"
+            className="input"
+            value={nuevoLibro.fecha_inicio}
+            onChange={e => setNuevoLibro({ ...nuevoLibro, fecha_inicio: e.target.value })}
+          />
+        </label>
+
+        <label className="label">
+          Fecha de finalización
+          <input
+            type="date"
+            className="input"
+            value={nuevoLibro.fecha_fin}
+            onChange={e => setNuevoLibro({ ...nuevoLibro, fecha_fin: e.target.value })}
+          />
+        </label>
         <button onClick={agregarLibro}>Añadir libro</button>
       </div>
     </div>
@@ -106,24 +129,94 @@ function ListaLibros() {
     }
   }
 
+  const actualizarValoracion = async (id: string, valor: number) => {
+    const { error } = await supabase
+      .from('libros')
+      .update({ valoracion: valor })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error al actualizar valoración:', error)
+      return
+    }
+
+    const librosActualizados = libros.map((libro) =>
+      libro.id === id ? { ...libro, valoracion: valor } : libro
+    )
+    setLibros(librosActualizados)
+  }
+
+
+  const librosPorLeer = libros.filter(l => l.estado === 'por leer' || l.estado === 'leyendo')
+  const librosLeidos = libros.filter(l => l.estado === 'leído')
+
   return (
     <div className="container">
       <h1 className="title">📚 Mis Libros</h1>
 
-      <ul className="book-list">
-        {libros.map(libro => (
-          <li key={libro.id} className="book-item">
-            <div className="book-details">
-              <strong>{libro.titulo}</strong> - {libro.autor} ({libro.estado})
-              {libro.notas && <p>{libro.notas}</p>}
-            </div>
-            <div className="book-actions">
-              <button onClick={() => eliminarLibro(libro.id)}>❌</button>
-              <button onClick={() => setLibroEditando(libro)}>✏️</button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="lists-wrapper">
+        <div className="list-section">
+          <h2>📖 Por leer / Leyendo</h2>
+          <ul className="book-list">
+            {librosPorLeer.map(libro => (
+              <li key={libro.id} className="book-item">
+                <div className="book-details">
+                  <h3>{libro.titulo}</h3>
+                  <div className="autor">{libro.autor}</div>
+                  <div className="estado">{libro.estado}</div>
+
+
+                  <div className="fechas">
+                    <div>📅 Inicio: {libro.fecha_inicio || 'No especificada'}</div>
+                    <div>✅ Fin: {libro.fecha_fin || 'No especificada'}</div>
+                  </div>
+
+
+                  <div className="notas">📝 {libro.notas || 'Sin notas'}</div>
+                </div>
+
+                <div className="book-actions">
+                  <button className="btn eliminar" onClick={() => eliminarLibro(libro.id)}>❌ Eliminar</button>
+                  <button className="btn editar" onClick={() => setLibroEditando(libro)}>✏️ Editar</button>
+                </div>
+
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="list-section">
+          <h2>✅ Leídos</h2>
+          <ul className="book-list">
+            {librosLeidos.map(libro => (
+              <li key={libro.id} className="book-item">
+                <div className="book-details">
+                  <h3>{libro.titulo}</h3>
+                  <div className="autor">{libro.autor}</div>
+                  <StarRating
+                    value={libro.valoracion ?? 0}
+                    onChange={(valor: number) => actualizarValoracion(libro.id, valor)}
+                  />
+                  <div className="estado">{libro.estado}</div>
+
+                  <div className="fechas">
+                    <div>📅 Inicio: {libro.fecha_inicio || 'No especificada'}</div>
+                    <div>✅ Fin: {libro.fecha_fin || 'No especificada'}</div>
+                  </div>
+
+
+                  <div className="notas">📝 {libro.notas || 'Sin notas'}</div>
+                </div>
+                <div className="book-actions">
+                  <button className="btn eliminar" onClick={() => eliminarLibro(libro.id)}>❌ Eliminar</button>
+                  <button className="btn editar" onClick={() => setLibroEditando(libro)}>✏️ Editar</button>
+                </div>
+
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
       {libroEditando && (
         <Modal onClose={() => setLibroEditando(null)}>
@@ -169,6 +262,25 @@ function ListaLibros() {
                 onChange={e => setLibroEditando({ ...libroEditando, notas: e.target.value })}
               />
             </label>
+            <label className="label">
+              Fecha de inicio
+              <input
+                type="date"
+                className="input"
+                value={libroEditando.fecha_inicio || ''}
+                onChange={e => setLibroEditando({ ...libroEditando, fecha_inicio: e.target.value })}
+              />
+            </label>
+
+            <label className="label">
+              Fecha de finalización
+              <input
+                type="date"
+                className="input"
+                value={libroEditando.fecha_fin || ''}
+                onChange={e => setLibroEditando({ ...libroEditando, fecha_fin: e.target.value })}
+              />
+            </label>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
               <button className="button" onClick={actualizarLibro}>Guardar cambios</button>
@@ -176,11 +288,11 @@ function ListaLibros() {
             </div>
           </div>
         </Modal>
-
       )}
     </div>
   )
 }
+
 
 function App() {
   return (
