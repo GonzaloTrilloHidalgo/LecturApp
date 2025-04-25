@@ -4,7 +4,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 
 export default defineConfig({
-  base: '/LecturApp/',
   plugins: [
     react(),
     VitePWA({
@@ -13,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: 'LecturApp',
         short_name: 'LecturApp',
-        start_url: '/LecturApp/',
+        start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#4f46e5',
