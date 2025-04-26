@@ -105,6 +105,11 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [autores, setAutores] = useState<string[]>([]) // Estado para los autores
   const [filtroAutor, setFiltroAutor] = useState('')
+  const [paginaActualPorLeer, setPaginaActualPorLeer] = useState(1);
+  const [paginaActualLeidos, setPaginaActualLeidos] = useState(1);
+  const librosPorPagina = 2;
+  const [mostrarModalAdvertencia, setMostrarModalAdvertencia] = useState(false);
+
 
 
 
@@ -194,8 +199,9 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
   const cantidadLeyendo = librosFiltrados.filter(libro => libro.estado === 'leyendo').length;
   const cantidadLeidos = librosFiltrados.filter(libro => libro.estado === 'leído').length;
 
-  const porcentajeLeido = ((cantidadLeidos / librosFiltrados.length) * 100).toFixed(1);
-
+  const porcentajeLeido = librosFiltrados.length > 0
+    ? ((cantidadLeidos / librosFiltrados.length) * 100).toFixed(1)
+    : '0.0';
 
 
   // Dividir los libros filtrados en dos categorías
@@ -224,6 +230,36 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
 
   const libroMasLento = librosConDuracion.reduce((prev, current) =>
     current.duracionDias > prev.duracionDias ? current : prev, librosConDuracion[0]);
+
+  // Para "por leer / leyendo"
+  const totalPaginasPorLeer = Math.ceil(librosPorLeerYLeyendo.length / librosPorPagina);
+  const librosPorLeerYLeyendoPaginados = librosPorLeerYLeyendo.slice(
+    (paginaActualPorLeer - 1) * librosPorPagina,
+    paginaActualPorLeer * librosPorPagina
+  );
+
+  // Para "leídos"
+  const totalPaginasLeidos = Math.ceil(librosLeidos.length / librosPorPagina);
+  const librosLeidosPaginados = librosLeidos.slice(
+    (paginaActualLeidos - 1) * librosPorPagina,
+    paginaActualLeidos * librosPorPagina
+  );
+
+  interface IntentarActualizarValoracionProps {
+    id: string;
+    estado: string;
+    valoracion?: number;
+  }
+
+  const intentarActualizarValoracion = (libro: IntentarActualizarValoracionProps, valor: number): void => {
+    if (libro.estado === 'Leído') {
+      actualizarValoracion(libro.id, valor);
+    } else {
+      setMostrarModalAdvertencia(true);
+    }
+  };
+
+
 
   return (
 
@@ -325,12 +361,16 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
           <h2>📖 Por leer / Leyendo</h2>
           <ul className="book-list">
 
-            {librosPorLeerYLeyendo.length > 0 ? (
-              librosPorLeerYLeyendo.map(libro => (
+            {librosPorLeerYLeyendoPaginados.length > 0 ? (
+              librosPorLeerYLeyendoPaginados.map(libro => (
                 <li key={libro.id} className={`book-item ${libro.estado}`}>
                   <div className="book-details">
                     <h3>{libro.titulo}</h3>
                     <div className="autor">{libro.autor}</div>
+                    <StarRating
+                      value={libro.valoracion || 0}
+                      onChange={(valor) => intentarActualizarValoracion(libro, valor)}
+                    />
                     <div className="estado">{libro.estado}</div>
 
                     <div className="fechas">
@@ -351,13 +391,31 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               <p>No se encontraron libros.</p>
             )}
           </ul>
+
+          <div className="paginacion">
+            <button
+              onClick={() => setPaginaActualPorLeer(pagina => Math.max(1, pagina - 1))}
+              disabled={paginaActualPorLeer === 1}
+            >
+              ◀ Anterior
+            </button>
+
+            <span>Página {paginaActualPorLeer} / {totalPaginasPorLeer}</span>
+
+            <button
+              onClick={() => setPaginaActualPorLeer(pagina => Math.min(totalPaginasPorLeer, pagina + 1))}
+              disabled={paginaActualPorLeer === totalPaginasPorLeer}
+            >
+              Siguiente ▶
+            </button>
+          </div>
         </div>
 
         <div className="list-section">
           <h2>✅ Leídos</h2>
           <ul className="book-list">
-            {librosLeidos.length > 0 ? (
-              librosLeidos.map(libro => (
+            {librosLeidosPaginados.length > 0 ? (
+              librosLeidosPaginados.map(libro => (
                 <li key={libro.id} className={`book-item ${libro.estado}`}>
                   <div className="book-details">
                     <h3>{libro.titulo}</h3>
@@ -386,6 +444,26 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               <p>No se encontraron libros.</p>
             )}
           </ul>
+
+          <div className="paginacion">
+            <button
+              onClick={() => setPaginaActualLeidos(pagina => Math.max(1, pagina - 1))}
+              disabled={paginaActualLeidos === 1}
+            >
+              ◀ Anterior
+            </button>
+
+            <span>Página {paginaActualLeidos} / {totalPaginasLeidos}</span>
+
+            <button
+              onClick={() => setPaginaActualLeidos(pagina => Math.min(totalPaginasLeidos, pagina + 1))}
+              disabled={paginaActualLeidos === totalPaginasLeidos}
+            >
+              Siguiente ▶
+            </button>
+          </div>
+
+
         </div>
       </div>
 
@@ -476,6 +554,19 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               }}
             >
               Eliminar
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {mostrarModalAdvertencia && (
+        <Modal onClose={() => setMostrarModalAdvertencia(false)}>
+          <h2 className="title-modal">⚠️ No puedes puntuar aún</h2>
+          <p className='modal-text'>Debes marcar el libro como <strong>"Leído"</strong> para poder darle una puntuación.</p>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+            <button className="button cancelar" onClick={() => setMostrarModalAdvertencia(false)}>
+              Cerrar
             </button>
           </div>
         </Modal>

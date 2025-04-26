@@ -99,7 +99,7 @@ body {
 
 .modo-oscuro .title {
   color: #fff;
-  border-color: #444;
+  border-color: #ffffff;
 }
 
 .title-modal {
@@ -212,6 +212,10 @@ button:hover {
   color: #333;
 }
 
+.modo-oscuro .form-label {
+  color: #fff;
+}
+
 .form-input,
 .form-select,
 .form-textarea {
@@ -222,6 +226,14 @@ button:hover {
   background-color: #f9f9fb;
   color: black;
   transition: border 0.2s ease;
+}
+
+.modo-oscuro .form-input,
+.modo-oscuro .form-select,
+.modo-oscuro .form-textarea {
+  background-color: #444;
+  color: #fff;
+  border-color: #555;
 }
 
 .form-input:focus,
@@ -593,7 +605,7 @@ button:hover {
   
 }
 .modo-oscuro .nav {
-  background: linear-gradient(90deg, #2c3e50, #34495e);
+  background: linear-gradient(90deg, #6c0184, #6c0184);
 }
 
 
@@ -863,7 +875,7 @@ button:hover {
 
 /* Estilo para el modo oscuro */
 .modo-oscuro .filtros-wrapper {
-  background: linear-gradient(90deg, #34495e, #2c3e50);
+  background: linear-gradient(90deg, #6c0184, #6c0184);
   color: #fff;
 }
 
@@ -873,7 +885,7 @@ button:hover {
 
 .modo-oscuro .subtitle {
   color: #fff;
-  border-color: #555;
+  border-color: #ffffff;
 }
 
 /* Resto de estilos */
@@ -902,5 +914,33 @@ button:hover {
 .modo-oscuro .filtro-btn.activo {
   background-color: #646cff;
   color: white;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.paginacion button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #4f46e5;
+  color: white;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.paginacion button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.modal-text{
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1rem;
 }
 
