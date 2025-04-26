@@ -19,8 +19,10 @@ type Libro = {
 
 function Formulario({
   onLibroAgregado,
+  setMensaje,
 }: {
-  onLibroAgregado: () => void
+  onLibroAgregado: () => void;
+  setMensaje: (mensaje: string) => void;
 }) {
   const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', autor: '', estado: 'por leer', notas: '', valoracion: 0 })
 
@@ -36,12 +38,13 @@ function Formulario({
     } else {
       setNuevoLibro({ titulo: '', autor: '', estado: 'por leer', notas: '', valoracion: 0 })
       onLibroAgregado()
+      setMensaje('Libro agregado con éxito')
     }
   }
 
   return (
     <div className="container-form">
-      <h1 className="title-form">✨ Nuevo libro</h1>
+      <h1 className="title">✨Nuevo libro</h1>
       <form className="form-card" onSubmit={e => { e.preventDefault(); agregarLibro(); }}>
         <label className="form-group">
           <span className="form-label">Título</span>
@@ -94,15 +97,20 @@ function Formulario({
   )
 }
 
-function ListaLibros() {
+function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
   const [libros, setLibros] = useState<Libro[]>([])
   const [libroEditando, setLibroEditando] = useState<Libro | null>(null)
   const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [autores, setAutores] = useState<string[]>([]) // Estado para los autores
+  const [filtroAutor, setFiltroAutor] = useState('')
+
+
 
   useEffect(() => {
-    obtenerLibros()
+    obtenerLibros();
+    obtenerAutores();
   }, [])
 
   const obtenerLibros = async () => {
@@ -111,9 +119,27 @@ function ListaLibros() {
     if (error) console.error('Error al obtener libros:', error)
   }
 
+  const obtenerAutores = async () => {
+    const { data, error } = await supabase
+      .from('libros')
+      .select('autor')
+
+    if (data) {
+      const autoresUnicos = Array.from(new Set(data.map(libro => libro.autor)))
+      setAutores(autoresUnicos)
+    }
+    if (error) console.error('Error al obtener autores:', error)
+  }
+
   const eliminarLibro = async (id: string) => {
     const { error } = await supabase.from('libros').delete().eq('id', id)
-    if (!error) obtenerLibros()
+
+    if (error) {
+      console.error('Error al eliminar libro:', error)
+    } else {
+      obtenerLibros()
+      setMensaje('Libro eliminado con éxito')
+    }
   }
 
   const actualizarLibro = async () => {
@@ -128,6 +154,7 @@ function ListaLibros() {
     } else {
       setLibroEditando(null)
       obtenerLibros()
+      setMensaje('Libro actualizado con éxito')
     }
   }
 
@@ -152,59 +179,145 @@ function ListaLibros() {
   // Lógica de filtrado general (aplica a todos los libros)
   const librosFiltrados = libros.filter(libro => {
     const coincideBusqueda =
-      libro.titulo.toLowerCase().includes(busqueda.toLowerCase()) ||
-      libro.autor.toLowerCase().includes(busqueda.toLowerCase());
+      libro.titulo.toLowerCase().includes(busqueda.toLowerCase())
 
     const coincideEstado =
       filtroEstado === 'todos' || libro.estado === filtroEstado;
 
-    return coincideBusqueda && coincideEstado;
+    const coincideAutor =
+      filtroAutor === '' || libro.autor === filtroAutor
+
+    return coincideBusqueda && coincideEstado && coincideAutor
   });
 
+  const cantidadPorLeer = librosFiltrados.filter(libro => libro.estado === 'por leer').length;
+  const cantidadLeyendo = librosFiltrados.filter(libro => libro.estado === 'leyendo').length;
+  const cantidadLeidos = librosFiltrados.filter(libro => libro.estado === 'leído').length;
+
+  const porcentajeLeido = ((cantidadLeidos / librosFiltrados.length) * 100).toFixed(1);
+
+
+
   // Dividir los libros filtrados en dos categorías
-  const librosPorLeerYLeyendo = librosFiltrados.filter(libro => libro.estado === 'por leer' || libro.estado === 'leyendo');
+  const librosPorLeerYLeyendo = librosFiltrados
+    .filter(libro => libro.estado === 'por leer' || libro.estado === 'leyendo')
+    .sort((a, b) => {
+      if (a.estado === 'leyendo' && b.estado !== 'leyendo') return -1
+      if (a.estado !== 'leyendo' && b.estado === 'leyendo') return 1
+      return 0
+    });
   const librosLeidos = librosFiltrados.filter(libro => libro.estado === 'leído');
+
+  // Calcular la duración de lectura (en días) para cada libro leído
+  const librosConDuracion = librosLeidos.map(libro => {
+    if (!libro.fecha_inicio || !libro.fecha_fin) return { ...libro, duracionDias: 0 };
+
+    const inicio = new Date(libro.fecha_inicio);
+    const fin = new Date(libro.fecha_fin);
+    const duracionDias = (fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24); // Convertir a días
+    return { ...libro, duracionDias };
+  });
+
+  // Encontrar el libro más rápido y más lento
+  const libroMasRapido = librosConDuracion.reduce((prev, current) =>
+    current.duracionDias < prev.duracionDias ? current : prev, librosConDuracion[0]);
+
+  const libroMasLento = librosConDuracion.reduce((prev, current) =>
+    current.duracionDias > prev.duracionDias ? current : prev, librosConDuracion[0]);
 
   return (
 
     <div className="container">
       <h1 className="title">📚 Mis Libros</h1>
+      <div className='filtros-contenedor'>
+        <div className="filtros-wrapper">
+          <h2 className="subtitle">🔍 Filtros de búsqueda</h2>
+          <div className="filtros-fila">
+            <div className="filtro-item">
+              <span className="filtros-label">Título:</span>
+              <input
+                type="text"
+                className="input filtro-busqueda"
+                placeholder="Buscar por título"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
 
-      <div className="filtros-wrapper">
-        <input
-          type="text"
-          className="input filtro-busqueda"
-          placeholder="Buscar por título o autor..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+            <div className="filtro-item">
+              <span className="filtros-label">Autor:</span>
+              <select
+                className="form-select-filtro"
+                value={filtroAutor}
+                onChange={(e) => setFiltroAutor(e.target.value)}
+              >
+                <option value="">Seleccionar autor...</option>
+                {autores.map((autor, index) => (
+                  <option key={index} value={autor}>
+                    {autor.charAt(0).toUpperCase() + autor.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <div className="filtros-estado">
-          <button
-            className={`filtro-btn ${filtroEstado === 'todos' ? 'activo' : ''}`}
-            onClick={() => setFiltroEstado('todos')}
-          >
-            Todos
-          </button>
-          <button
-            className={`filtro-btn ${filtroEstado === 'por leer' ? 'activo' : ''}`}
-            onClick={() => setFiltroEstado('por leer')}
-          >
-            Por leer
-          </button>
-          <button
-            className={`filtro-btn ${filtroEstado === 'leyendo' ? 'activo' : ''}`}
-            onClick={() => setFiltroEstado('leyendo')}
-          >
-            Leyendo
-          </button>
-          <button
-            className={`filtro-btn ${filtroEstado === 'leído' ? 'activo' : ''}`}
-            onClick={() => setFiltroEstado('leído')}
-          >
-            Leído
-          </button>
+          <span className="filtros-label">Estado:</span>
+          <div className="filtros-estado">
+            <button
+              className={`filtro-btn ${filtroEstado === 'todos' ? 'activo' : ''}`}
+              onClick={() => setFiltroEstado('todos')}
+            >
+              Todos
+            </button>
+            <button
+              className={`filtro-btn ${filtroEstado === 'por leer' ? 'activo' : ''}`}
+              onClick={() => setFiltroEstado('por leer')}
+            >
+              Por leer
+            </button>
+            <button
+              className={`filtro-btn ${filtroEstado === 'leyendo' ? 'activo' : ''}`}
+              onClick={() => setFiltroEstado('leyendo')}
+            >
+              Leyendo
+            </button>
+            <button
+              className={`filtro-btn ${filtroEstado === 'leído' ? 'activo' : ''}`}
+              onClick={() => setFiltroEstado('leído')}
+            >
+              Leído
+            </button>
+          </div>
         </div>
+
+        <div className="filtros-estadisticas-container">
+          <div className="resumen-libros">
+            <div className="estadisticas-grid">
+              <span>📖 Por leer: <strong>{cantidadPorLeer}</strong></span>
+              <span>📘 Leyendo: <strong>{cantidadLeyendo}</strong></span>
+              <span>✅ Leídos: <strong>{cantidadLeidos}</strong></span>
+              <span>📚 Total: <strong>{librosFiltrados.length}</strong></span>
+              <span>⭐ Valoración promedio: <strong>{(librosLeidos.reduce((sum, libro) => sum + (libro.valoracion || 0), 0) / (librosLeidos.length || 1)).toFixed(1)}</strong></span>
+            </div>
+            <div className="progreso-lectura">
+              <span>Progreso de lectura: {porcentajeLeido}%</span>
+              <div className="barra-progreso">
+                <div className="relleno-progreso" style={{ width: `${porcentajeLeido}%` }}></div>
+              </div>
+            </div>
+
+            <div className="libros-rapido-lento">
+              {libroMasRapido && (
+                <p>📖 Libro leído más rápido: <strong>{libroMasRapido.titulo}</strong> ({libroMasRapido.duracionDias.toFixed(1)} días)</p>
+              )}
+              {libroMasLento && (
+                <p>🐢 Libro leído más lento: <strong>{libroMasLento.titulo}</strong> ({libroMasLento.duracionDias.toFixed(1)} días)</p>
+              )}
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
       <div className="lists-wrapper">
@@ -350,7 +463,7 @@ function ListaLibros() {
 
       {libroAEliminar && (
         <Modal onClose={() => setLibroAEliminar(null)}>
-          <h2 className="title">❗ Confirmar eliminación</h2>
+          <h2 className="title-modal">❗ Confirmar eliminación</h2>
           <p>¿Estás seguro de que quieres eliminar <strong>{libroAEliminar.titulo}</strong>?</p>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
@@ -373,6 +486,41 @@ function ListaLibros() {
 
 
 function App() {
+  const [mensaje, setMensaje] = useState('')
+  const [modoOscuro, setModoOscuro] = useState(false);
+
+  // Comprobar la preferencia del usuario al cargar la página
+  useEffect(() => {
+    const temaGuardado = localStorage.getItem('modoOscuro');
+    if (temaGuardado === 'true') {
+      setModoOscuro(true);
+    }
+  }, []);
+
+  // Cambiar el tema y guardarlo en el almacenamiento local
+  const cambiarModo = () => {
+    setModoOscuro(!modoOscuro);
+    localStorage.setItem('modoOscuro', (!modoOscuro).toString());
+  };
+
+  // Aplicar la clase para el modo oscuro
+  useEffect(() => {
+    if (modoOscuro) {
+      document.body.classList.add('modo-oscuro');
+    } else {
+      document.body.classList.remove('modo-oscuro');
+    }
+  }, [modoOscuro]);
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje('');
+      }, 3000); // 3 segundos
+
+      return () => clearTimeout(timer); // limpieza
+    }
+  }, [mensaje]);
+
   return (
     <Router>
       <nav className="nav">
@@ -382,13 +530,17 @@ function App() {
         <NavLink to="/libros" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           📚 Ver lista
         </NavLink>
+        <button className="modo-boton" onClick={cambiarModo}>
+          {modoOscuro ? '🌞 Modo Claro' : '🌙 Modo Oscuro'}
+        </button>
       </nav>
 
 
       <Routes>
-        <Route path="/" element={<Formulario onLibroAgregado={() => { }} />} />
-        <Route path="/libros" element={<ListaLibros />} />
+        <Route path="/" element={<Formulario onLibroAgregado={() => { }} setMensaje={setMensaje} />} />
+        <Route path="/libros" element={<ListaLibros setMensaje={setMensaje} />} />
       </Routes>
+      {mensaje && <Modal onClose={() => setMensaje('')}><div className="mensaje">{mensaje}</div></Modal>}
     </Router>
   )
 }

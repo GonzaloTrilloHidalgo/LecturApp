@@ -2,8 +2,31 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f0f2f5;
   overflow-x: hidden;
+  background-color: #fff;
+  color: #000;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Estilo para el modo oscuro */
+.modo-oscuro {
+  background-color: #121212;
+  color: #fff;
+}
+
+/* Botón para cambiar de modo */
+.modo-boton {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  color: inherit;
+  padding: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modo-boton:hover {
+  background-color: #ddd;
 }
 
 #root {
@@ -20,9 +43,11 @@ body {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -31,6 +56,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -50,6 +76,9 @@ body {
   padding: 2rem 3rem;
   background-color: transparent;
   box-shadow: none;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .title {
@@ -57,7 +86,29 @@ body {
   font-size: 2.5rem;
   margin-bottom: 30px;
   color: #2c3e50;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid black;
+  padding: 10px;
+  border-radius: 10px;
 }
+
+.modo-oscuro .title {
+  color: #fff;
+  border-color: #444;
+}
+
+.title-modal {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
 
 /* Formulario */
 .form {
@@ -75,6 +126,14 @@ select {
   border: 1px solid #ccc;
   border-radius: 8px;
   transition: border-color 0.3s ease;
+}
+
+.modo-oscuro input,
+.modo-oscuro textarea,
+.modo-oscuro select {
+  background-color: #333;
+  color: #fff;
+  border-color: #444;
 }
 
 input:focus,
@@ -99,6 +158,10 @@ button:hover {
   background-color: #0056b3;
 }
 
+.modo-oscuro button {
+  background-color: #0056b3;
+}
+
 .container-form {
   max-width: 900px;
   margin: 3rem auto;
@@ -116,16 +179,25 @@ button:hover {
   margin-bottom: 2rem;
 }
 
+.modo-oscuro .title-form {
+  color: #fff;
+}
+
 .form-card {
   width: 100%;
   max-width: 600px;
   background-color: #fff;
   padding: 2.5rem 2rem;
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.modo-oscuro .form-card {
+  background-color: #333;
+  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.1);
 }
 
 .form-group {
@@ -201,9 +273,11 @@ button:hover {
 
 /* Añadir espacio entre las secciones de lista */
 .list-section {
-  flex: 1 1 45%; /* Asegura que las secciones ocupen un 45% del contenedor */
-  max-width: 45%; /* No más del 45% */
-  background-color: #f8f9fa;
+  flex: 1 1 45%;
+  /* Asegura que las secciones ocupen un 45% del contenedor */
+  max-width: 45%;
+  /* No más del 45% */
+  background-color: #d1cccc;
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
@@ -211,7 +285,18 @@ button:hover {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Espacio entre los items */
+  gap: 1rem;
+  /* Espacio entre los items */
+}
+
+.modo-oscuro .list-section {
+  background-color: #2c2c2c;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.modo-oscuro .list-section h2 {
+  color: #fff;
 }
 
 .list-section h2 {
@@ -227,9 +312,11 @@ button:hover {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Espacio entre los elementos */
+  gap: 1rem;
+  /* Espacio entre los elementos */
   height: 100%;
 }
+
 
 /* book-item */
 .book-item {
@@ -243,7 +330,8 @@ button:hover {
   color: black;
   width: 100%;
   box-sizing: border-box;
-  min-height: 100px; /* Establece una altura mínima para todos los items */
+  min-height: 100px;
+  /* Establece una altura mínima para todos los items */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -261,8 +349,15 @@ button:hover {
   gap: 0.5rem;
   font-family: 'Segoe UI', sans-serif;
   margin-bottom: 1rem;
-  width: 100%; /* Asegura que ocupe el 100% del contenedor */
-  box-sizing: border-box; /* Evita que el padding o el border afecten el tamaño */
+  width: 100%;
+  /* Asegura que ocupe el 100% del contenedor */
+  box-sizing: border-box;
+  /* Evita que el padding o el border afecten el tamaño */
+}
+
+.modo-oscuro .book-details {
+  background: #2c2c2c;
+  color: #fff;
 }
 
 .book-details h3 {
@@ -272,10 +367,19 @@ button:hover {
   text-transform: uppercase;
 }
 
+.modo-oscuro .book-details h3 {
+  
+  color: #ffffff;
+}
+
 .book-details .autor {
   font-size: 1rem;
   color: #666;
   text-transform: capitalize;
+}
+
+.modo-oscuro .book-details .autor {
+  color: #bbb;
 }
 
 .book-details .estado {
@@ -291,12 +395,21 @@ button:hover {
   text-transform: uppercase;
 }
 
+.modo-oscuro .book-details .estado {
+  background-color: #1e1e1e;
+  color: #007bff;
+}
+
 .book-details .fechas {
   font-size: 0.9rem;
   color: #444;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.modo-oscuro .book-details .fechas {
+  color: #bbb;
 }
 
 .book-details .notas {
@@ -306,13 +419,19 @@ button:hover {
   padding-top: 0.5rem;
 }
 
+.modo-oscuro .book-details .notas {
+  color: #aaa;
+  border-color: #444;
+}
+
 /* Botones y acciones */
 /* Asegúrate de que los botones se ajusten en pequeños dispositivos */
 .book-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: space-between;
-  flex-wrap: wrap; /* Asegura que los botones se ajusten en pantallas más pequeñas */
+  flex-wrap: wrap;
+  /* Asegura que los botones se ajusten en pantallas más pequeñas */
   width: 100%;
 }
 
@@ -388,6 +507,11 @@ button:hover {
   border: 1px solid #ccc;
 }
 
+.modo-oscuro .edit-form {
+  background-color: #2c2c2c;
+  border-color: #444;
+}
+
 .label {
   display: flex;
   flex-direction: column;
@@ -395,6 +519,10 @@ button:hover {
   margin-bottom: 1rem;
   font-size: 0.95rem;
   color: #333;
+}
+
+.modo-oscuro .label {
+  color: #fff;
 }
 
 .input,
@@ -413,6 +541,13 @@ button:hover {
   outline: none;
 }
 
+.modo-oscuro .input,
+.modo-oscuro .select {
+  background-color: #333;
+  color: #fff;
+  border-color: #444;
+}
+
 .button {
   padding: 10px 16px;
   border: none;
@@ -425,6 +560,10 @@ button:hover {
 }
 
 .button:hover {
+  background-color: #0056b3;
+}
+
+.modo-oscuro .button {
   background-color: #0056b3;
 }
 
@@ -448,7 +587,15 @@ button:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   font-size: 1.1rem;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  
 }
+.modo-oscuro .nav {
+  background: linear-gradient(90deg, #2c3e50, #34495e);
+}
+
 
 .nav-link {
   padding: 0.6rem 1rem;
@@ -471,6 +618,10 @@ button:hover {
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
+.modo-oscuro .nav-link {
+  color: #ddd;
+}
+
 .star-rating {
   display: flex;
   gap: 4px;
@@ -483,12 +634,114 @@ button:hover {
   transition: color 0.2s ease;
 }
 
+.modo-oscuro .star-rating span {
+  color: #fff;
+}
+
+.filtros-contenedor {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+
+.filtros-estadisticas-container {
+  display: flex;
+  align-items: flex-start;  /* Alineación vertical desde el principio */
+  justify-content: space-between; /* Deja espacio entre los dos contenedores */
+  gap: 2rem;  /* Espacio entre los contenedores */
+  color:#000
+}
+
+.resumen-libros {
+  animation: fadeInUp 0.6s ease forwards;
+  background-color: #d1cccc;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column; 
+  gap: 1rem;
+  justify-content: flex-start;
+  color: #333;
+  transition: transform 0.3s ease;
+}
+
+.resumen-libros span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resumen-libros span::before {
+  font-size: 1.2rem;
+}
+
+.resumen-libros:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.estadisticas-container {
+  width: 70%;
+}
+
+/* Animación de Fade-in */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .filtros-wrapper {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   margin-bottom: 2rem;
   align-items: center;
+  background-color: #f8f9fa;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(90deg, #ba68c8, #f06292);
+}
+
+.filtros-wrapper h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 1rem;
+  /* Más pequeño */
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  /* Línea debajo */
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  margin-top: 0;
+  /* Alineado arriba */
+  width: 100%;
+}
+
+.filtros-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  margin: 10px;
+  padding: 0;
 }
 
 .filtros-estado {
@@ -496,6 +749,24 @@ button:hover {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
+}
+
+.filtros-fila {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.filtro-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
 }
 
 .filtro-btn {
@@ -506,6 +777,7 @@ button:hover {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
+  color: black;
 }
 
 .filtro-btn:hover {
@@ -520,6 +792,115 @@ button:hover {
 .filtro-busqueda {
   max-width: 400px;
   width: 100%;
+  color: black;
+  background-color: #ddd;
 }
 
+.form-select-filtro {
+  border-radius: 8px;
+  background-color: #ccc;
+  color: black;
+}
+
+.mensaje {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.progreso-lectura {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.barra-progreso {
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.relleno-progreso {
+  height: 100%;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  width: 0;
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+
+.libros-rapido-lento {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.libros-rapido-lento p {
+  margin: 0;
+  padding: 0;
+}
+
+.estadisticas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Crea dos columnas de tamaño igual */
+  gap: 1rem; /* Espacio entre las columnas */
+  margin-bottom: 1rem; /* Añade un poco de espacio debajo de la grilla */
+}
+
+.estadisticas-grid span {
+  font-size: 1rem; /* Tamaño de fuente */
+  font-weight: normal;
+}
+
+/* Estilo para el modo oscuro */
+.modo-oscuro .filtros-wrapper {
+  background: linear-gradient(90deg, #34495e, #2c3e50);
+  color: #fff;
+}
+
+.modo-oscuro .filtros-label {
+  color: #fff;
+}
+
+.modo-oscuro .subtitle {
+  color: #fff;
+  border-color: #555;
+}
+
+/* Resto de estilos */
+.modo-oscuro .resumen-libros {
+  background: linear-gradient(135deg, #333, #444);
+  border: 2px solid #555;
+  color: #fff;
+}
+
+.modo-oscuro .filtros-busqueda,
+.modo-oscuro .form-select-filtro {
+  background-color: #444;
+  color: #fff;
+  border-color: #555;
+}
+
+.modo-oscuro .filtro-btn {
+  background-color: #555;
+  color: #fff;
+}
+
+.modo-oscuro .filtro-btn:hover {
+  background-color: #666;
+}
+
+.modo-oscuro .filtro-btn.activo {
+  background-color: #646cff;
+  color: white;
+}
 
