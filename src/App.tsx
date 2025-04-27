@@ -1,9 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import './App.css'
-import { useEffect, useState } from 'react'
+import { JSX, useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Modal from './Modal'
 import StarRating from './StarRating'
+import Auth from "./Auth"
+import Register from './register'
 
 // Tipos
 type Libro = {
@@ -31,14 +33,36 @@ function Formulario({
       alert('Por favor completa el título y autor')
       return
     }
+    // Obtener el usuario logueado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('libros').insert([nuevoLibro])
+    if (userError) {
+      console.error('Error al obtener el usuario:', userError);
+      setMensaje('Error al obtener usuario');
+      return;
+    }
+
+    if (!user) {
+      console.log('No hay usuario logueado');
+      setMensaje('No hay usuario logueado');
+      return;
+    }
+
+
+
+    // Agregar el user_id al libro antes de insertarlo
+    const libroConUsuario = { ...nuevoLibro, user_id: user.id };
+
+    // Insertar el libro en la base de datos
+    const { error } = await supabase.from('libros').insert([libroConUsuario]);
     if (error) {
-      console.error('Error al insertar:', error)
+      console.error('Error al insertar:', error);
+      setMensaje('Hubo un error al agregar el libro');
     } else {
-      setNuevoLibro({ titulo: '', autor: '', estado: 'por leer', notas: '', valoracion: 0 })
-      onLibroAgregado()
-      setMensaje('Libro agregado con éxito')
+      // Limpiar el formulario y notificar éxito
+      setNuevoLibro({ titulo: '', autor: '', estado: 'por leer', notas: '', valoracion: 0 });
+      onLibroAgregado();
+      setMensaje('Libro agregado con éxito');
     }
   }
 
@@ -109,9 +133,7 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
   const [paginaActualLeidos, setPaginaActualLeidos] = useState(1);
   const librosPorPagina = 2;
   const [mostrarModalAdvertencia, setMostrarModalAdvertencia] = useState(false);
-
-
-
+  const libroActual = libros.find(libro => libro.estado === 'leyendo');
 
   useEffect(() => {
     obtenerLibros();
@@ -119,15 +141,33 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
   }, [])
 
   const obtenerLibros = async () => {
-    const { data, error } = await supabase.from('libros').select('*').order('created_at', { ascending: false })
-    if (data) setLibros(data)
-    if (error) console.error('Error al obtener libros:', error)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    console.log('Usuario logueado:', user);
+
+    if (userError) {
+      console.error('Error al obtener usuario:', userError);
+      return;
+    }
+    if (user) {
+      const { data, error } = await supabase
+        .from('libros')
+        .select('*')
+        .eq('user_id', user.id)  // Aquí usamos el user.id para filtrar por el usuario logueado
+        .order('created_at', { ascending: false });
+
+      if (data) setLibros(data);
+      if (error) console.error('Error al obtener libros:', error);
+    } else {
+      console.log("No hay un usuario autenticado");
+    }
   }
 
   const obtenerAutores = async () => {
     const { data, error } = await supabase
       .from('libros')
       .select('autor')
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '') // Filtrar por el usuario logueado
 
     if (data) {
       const autoresUnicos = Array.from(new Set(data.map(libro => libro.autor)))
@@ -356,8 +396,20 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
 
       </div>
 
+      {libroActual ? (
+        <div className="leyendo-actualmente">
+          📚 <strong>Estás leyendo actualmente:</strong> {libroActual.titulo}
+        </div>
+      ) : (
+        <p>No se encontraron libros leyendo.</p>
+      )}
+
       <div className="lists-wrapper">
+
+
         <div className="list-section">
+
+
           <h2>📖 Por leer / Leyendo</h2>
           <ul className="book-list">
 
@@ -391,7 +443,7 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               <p>No se encontraron libros.</p>
             )}
           </ul>
-
+          {librosPorLeerYLeyendo.length > 0  && (  
           <div className="paginacion">
             <button
               onClick={() => setPaginaActualPorLeer(pagina => Math.max(1, pagina - 1))}
@@ -409,6 +461,7 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               Siguiente ▶
             </button>
           </div>
+          )}
         </div>
 
         <div className="list-section">
@@ -445,24 +498,25 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
             )}
           </ul>
 
-          <div className="paginacion">
-            <button
-              onClick={() => setPaginaActualLeidos(pagina => Math.max(1, pagina - 1))}
-              disabled={paginaActualLeidos === 1}
-            >
-              ◀ Anterior
-            </button>
+          {librosLeidos.length > 0 && (
+            <div className="paginacion">
+              <button
+                onClick={() => setPaginaActualLeidos(pagina => Math.max(1, pagina - 1))}
+                disabled={paginaActualLeidos === 1}
+              >
+                ◀ Anterior
+              </button>
 
-            <span>Página {paginaActualLeidos} / {totalPaginasLeidos}</span>
+              <span>Página {paginaActualLeidos} / {totalPaginasLeidos}</span>
 
-            <button
-              onClick={() => setPaginaActualLeidos(pagina => Math.min(totalPaginasLeidos, pagina + 1))}
-              disabled={paginaActualLeidos === totalPaginasLeidos}
-            >
-              Siguiente ▶
-            </button>
-          </div>
-
+              <button
+                onClick={() => setPaginaActualLeidos(pagina => Math.min(totalPaginasLeidos, pagina + 1))}
+                disabled={paginaActualLeidos === totalPaginasLeidos}
+              >
+                Siguiente ▶
+              </button>
+            </div>
+          )}
 
         </div>
       </div>
@@ -491,11 +545,17 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
 
             <label className="label">
               Estado
+              {/* si ya hay un libro con estado leyendo, no puede ponerse otro */}
               <select
                 className="select"
                 value={libroEditando.estado}
-                onChange={e => setLibroEditando({ ...libroEditando, estado: e.target.value })}
-              >
+                onChange={e => {
+                  if (e.target.value === 'leyendo' && libros.some(libro => libro.estado === 'leyendo')) {
+                    setMensaje('Ya estas leyendo un libro actualmente. Cambia el estado de ese libro primero.');
+                    return;
+                  }
+                  setLibroEditando({ ...libroEditando, estado: e.target.value });
+                }}>
                 <option value="por leer">Por leer</option>
                 <option value="leyendo">Leyendo</option>
                 <option value="leído">Leído</option>
@@ -579,6 +639,7 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
 function App() {
   const [mensaje, setMensaje] = useState('')
   const [modoOscuro, setModoOscuro] = useState(false);
+  const [user, setUser] = useState<any>(null)
 
   // Comprobar la preferencia del usuario al cargar la página
   useEffect(() => {
@@ -587,6 +648,23 @@ function App() {
       setModoOscuro(true);
     }
   }, []);
+
+  // Comprobar si el usuario está logueado
+  useEffect(() => {
+    const session = supabase.auth.getSession()
+    session.then(({ data }) => {
+      if (data.session) {
+        setUser(data.session.user)
+      }
+    })
+  }, [])
+
+  // Función para cerrar sesión
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setMensaje('Has cerrado sesión')
+  }
 
   // Cambiar el tema y guardarlo en el almacenamiento local
   const cambiarModo = () => {
@@ -612,6 +690,14 @@ function App() {
     }
   }, [mensaje]);
 
+  // PrivateRoute: Ruta protegida que solo permite el acceso si el usuario está logueado
+  const PrivateRoute = ({ element }: { element: JSX.Element }) => {
+    if (!user) {
+      return <Navigate to="/login" />;
+    }
+    return element;
+  };
+
   return (
     <Router>
       <nav className="nav">
@@ -624,12 +710,36 @@ function App() {
         <button className="modo-boton" onClick={cambiarModo}>
           {modoOscuro ? '🌞 Modo Claro' : '🌙 Modo Oscuro'}
         </button>
+
+        {!user && (
+          <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Iniciar sesión
+          </NavLink>
+        )}
+        {!user && (
+          <NavLink to="/register" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Registrarse
+          </NavLink>
+        )}
+        {user && (
+          <button onClick={handleLogout} className="logout-button">
+            Cerrar sesión
+          </button>
+        )}
+
+        {user && (
+          <div className="user-info">
+            <span className="user-email">{user.email}</span>
+          </div>
+        )}
       </nav>
 
 
       <Routes>
-        <Route path="/" element={<Formulario onLibroAgregado={() => { }} setMensaje={setMensaje} />} />
-        <Route path="/libros" element={<ListaLibros setMensaje={setMensaje} />} />
+        <Route path="/" element={<PrivateRoute element={<Formulario onLibroAgregado={() => { }} setMensaje={setMensaje} />} />} />
+        <Route path="/libros" element={<PrivateRoute element={<ListaLibros setMensaje={setMensaje} />} />} />
+        <Route path="/login" element={<Auth setUser={setUser} setMensaje={setMensaje} />} />
+        <Route path="/register" element={<Register setUser={setUser} setMensaje={setMensaje} />} />
       </Routes>
       {mensaje && <Modal onClose={() => setMensaje('')}><div className="mensaje">{mensaje}</div></Modal>}
     </Router>

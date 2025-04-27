@@ -944,3 +944,102 @@ button:hover {
   margin-bottom: 1rem;
 }
 
+.leyendo-actualmente {
+  background-color: #e0f7fa;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-left: 5px solid #00bcd4;
+  font-size: 1.1rem;
+  border-radius: 8px;
+}
+
+.logout-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.logout-button:hover {
+  background-color: #ff7875;
+}
+
+/* Estilos generales del contenedor del formulario */
+.login-form-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Título del formulario */
+.login-form-container h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Estilos del formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilos de las etiquetas y los inputs */
+.input-label {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 5px;
+  text-align: left;
+  font-weight: 500;
+  margin: 10px;
+}
+
+.input-field {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border 0.3s ease;
+  background-color: #fff;
+  margin: 10px;
+  color: black;
+}
+
+.input-field:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Estilo del botón de submit */
+.submit-button {
+  padding: 12px 20px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+}
+
+.submit-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+
