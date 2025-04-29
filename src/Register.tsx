@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import './register.css'; // Asegúrate de importar los estilos CSS
+import './Register.css';
 
 const Register = ({ setUser, setMensaje }: { setUser: (user: any) => void; setMensaje: (message: string) => void }) => {
   const [email, setEmail] = useState('');
