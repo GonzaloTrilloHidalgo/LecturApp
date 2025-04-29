@@ -5,7 +5,7 @@ import { supabase } from './supabaseClient'
 import Modal from './Modal'
 import StarRating from './StarRating'
 import Auth from "./Auth"
-import Register from './register'
+import Register from './Register'
 
 // Tipos
 type Libro = {
@@ -29,24 +29,21 @@ function Formulario({
   const [nuevoLibro, setNuevoLibro] = useState({ titulo: '', autor: '', estado: 'por leer', notas: '', valoracion: 0 })
 
   const agregarLibro = async () => {
+
+    //si el usuario no ha iniciado sesión, no puede agregar libros
+    const { data: { user } } = await supabase.auth.getUser();
+
+
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
     if (!nuevoLibro.titulo || !nuevoLibro.autor) {
       alert('Por favor completa el título y autor')
       return
     }
-    // Obtener el usuario logueado
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError) {
-      console.error('Error al obtener el usuario:', userError);
-      setMensaje('Error al obtener usuario');
-      return;
-    }
-
-    if (!user) {
-      console.log('No hay usuario logueado');
-      setMensaje('No hay usuario logueado');
-      return;
-    }
+    // El usuario ya fue obtenido previamente, no es necesario volver a declararlo
 
 
 
@@ -113,7 +110,9 @@ function Formulario({
           />
         </label>
         <div className="form-actions">
-          <button type="submit" className="button">Añadir libro</button>
+
+          <button disabled={!nuevoLibro.titulo || !nuevoLibro.autor} type="submit" className="button">Añadir libro</button>
+
         </div>
       </form>
     </div>
@@ -443,24 +442,24 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
               <p>No se encontraron libros.</p>
             )}
           </ul>
-          {librosPorLeerYLeyendo.length > 0  && (  
-          <div className="paginacion">
-            <button
-              onClick={() => setPaginaActualPorLeer(pagina => Math.max(1, pagina - 1))}
-              disabled={paginaActualPorLeer === 1}
-            >
-              ◀ Anterior
-            </button>
+          {librosPorLeerYLeyendo.length > 0 && (
+            <div className="paginacion">
+              <button
+                onClick={() => setPaginaActualPorLeer(pagina => Math.max(1, pagina - 1))}
+                disabled={paginaActualPorLeer === 1}
+              >
+                ◀ Anterior
+              </button>
 
-            <span>Página {paginaActualPorLeer} / {totalPaginasPorLeer}</span>
+              <span>Página {paginaActualPorLeer} / {totalPaginasPorLeer}</span>
 
-            <button
-              onClick={() => setPaginaActualPorLeer(pagina => Math.min(totalPaginasPorLeer, pagina + 1))}
-              disabled={paginaActualPorLeer === totalPaginasPorLeer}
-            >
-              Siguiente ▶
-            </button>
-          </div>
+              <button
+                onClick={() => setPaginaActualPorLeer(pagina => Math.min(totalPaginasPorLeer, pagina + 1))}
+                disabled={paginaActualPorLeer === totalPaginasPorLeer}
+              >
+                Siguiente ▶
+              </button>
+            </div>
           )}
         </div>
 
@@ -637,9 +636,9 @@ function ListaLibros({ setMensaje }: { setMensaje: (msg: string) => void }) {
 
 
 function App() {
-  const [mensaje, setMensaje] = useState('')
+  const [mensaje, setMensaje] = useState('');
   const [modoOscuro, setModoOscuro] = useState(false);
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(null);
 
   // Comprobar la preferencia del usuario al cargar la página
   useEffect(() => {
@@ -651,20 +650,20 @@ function App() {
 
   // Comprobar si el usuario está logueado
   useEffect(() => {
-    const session = supabase.auth.getSession()
+    const session = supabase.auth.getSession();
     session.then(({ data }) => {
       if (data.session) {
-        setUser(data.session.user)
+        setUser(data.session.user);
       }
-    })
-  }, [])
+    });
+  }, []);
 
   // Función para cerrar sesión
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setMensaje('Has cerrado sesión')
-  }
+    await supabase.auth.signOut();
+    setUser(null);
+    setMensaje(`Hasta pronto ${user.email} !! 👋`);
+  };
 
   // Cambiar el tema y guardarlo en el almacenamiento local
   const cambiarModo = () => {
@@ -681,6 +680,16 @@ function App() {
     }
   }, [modoOscuro]);
 
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje('');
+      }, 2000); // 3 segundos
+
+      return () => clearTimeout(timer); // limpieza
+    }
+  }, [mensaje]);
+
   // PrivateRoute: Ruta protegida que solo permite el acceso si el usuario está logueado
   const PrivateRoute = ({ element }: { element: JSX.Element }) => {
     if (!user) {
@@ -692,49 +701,42 @@ function App() {
   return (
     <Router>
       <nav className="nav">
-        <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          ➕ Añadir libro
-        </NavLink>
-        <NavLink to="/libros" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          📚 Ver lista
-        </NavLink>
-        <button className="modo-boton" onClick={cambiarModo}>
-          {modoOscuro ? '🌞 Modo Claro' : '🌙 Modo Oscuro'}
+        <div className="nav-links">
+          <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>➕ Añadir libro</NavLink>
+          <NavLink to="/libros" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>📚 Ver lista</NavLink>
+
+          {!user && (
+            <>
+              <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Iniciar sesión</NavLink>
+              <NavLink to="/register" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Registrarse</NavLink>
+            </>
+          )}
+
+          {user && (
+            <>
+              <button onClick={handleLogout} className="logout-button">Cerrar sesión</button>
+              <div className="user-info">
+                <span className="user-email">{user.email}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <button className="modo-toggle-minimal" onClick={cambiarModo}>
+          {modoOscuro ? '🌞' : '🌙'}
         </button>
-
-        {!user && (
-          <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            Iniciar sesión
-          </NavLink>
-        )}
-        {!user && (
-          <NavLink to="/register" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            Registrarse
-          </NavLink>
-        )}
-        {user && (
-          <button onClick={handleLogout} className="logout-button">
-            Cerrar sesión
-          </button>
-        )}
-
-        {user && (
-          <div className="user-info">
-            <span className="user-email">{user.email}</span>
-          </div>
-        )}
       </nav>
 
-
       <Routes>
-        <Route path="/" element={<PrivateRoute element={<Formulario onLibroAgregado={() => { }} setMensaje={setMensaje} />} />} />
+        <Route path="/" element={<Formulario onLibroAgregado={() => { }} setMensaje={setMensaje} />} />
         <Route path="/libros" element={<PrivateRoute element={<ListaLibros setMensaje={setMensaje} />} />} />
         <Route path="/login" element={<Auth setUser={setUser} setMensaje={setMensaje} />} />
         <Route path="/register" element={<Register setUser={setUser} setMensaje={setMensaje} />} />
       </Routes>
+
       {mensaje && <Modal onClose={() => setMensaje('')}><div className="mensaje">{mensaje}</div></Modal>}
     </Router>
-  )
+  );
 }
 
 export default App

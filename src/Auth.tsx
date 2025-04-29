@@ -31,10 +31,9 @@ const Login = ({ setUser, setMensaje }: LoginProps) => {
     } else {
       // Ahora accedes a la propiedad 'user' dentro de 'data'
       setUser(data.user)  // Aquí accedemos a `data.user` en lugar de solo `user`
-      setMensaje('Bienvenido')
-
-
+      //email
       
+      setMensaje(`Bienvenido ${data.user?.user_metadata.full_name} !!`) // Asegúrate de que `user_metadata` tenga el campo `full_name`      
       navigate('/');
     }
   }

@@ -593,7 +593,7 @@ button:hover {
   padding: 1rem 2rem;
   background: linear-gradient(90deg, #f06292, #ba68c8);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -608,30 +608,133 @@ button:hover {
   background: linear-gradient(90deg, #6c0184, #6c0184);
 }
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modo-toggle-minimal {
+  background: none;
+  border: 1px solid black;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+  border-radius: 50%;
+
+}
+
+.modo-oscuro .modo-toggle-minimal {
+  transition: transform 0.2s ease, opacity 0.3s ease;
+  background: linear-gradient(90deg, #6c0184, #6c0184);
+}
+
+.modo-toggle-minimal:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
+
+}
+
 
 .nav-link {
-  padding: 0.6rem 1rem;
+  position: relative;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   color: #fff;
   text-decoration: none;
-  font-weight: 500;
-  background-color: rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  transition: color 0.3s;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  color: #ccc;
 }
 
 .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #00f0ff, #9f00ff, #ff0066, #00f0ff);
+  background-size: 300% 300%;
+  animation: borderGlow 4s linear infinite;
+  z-index: -1;
+}
+
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.modo-boton {
+  background-color: transparent;
+  border: 1px solid #aaa;
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modo-boton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
+  margin-left: auto;
+}
+
+.user-email {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
   font-weight: bold;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  color: white;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
 }
 
 .modo-oscuro .nav-link {
   color: #ddd;
+}
+
+/* Alineación de los elementos a la derecha */
+.nav .perfil-link {
+  margin-left: auto;  /* Esto empuja el enlace hacia la derecha */
+}
+
+/* Puedes personalizar el enlace de perfil como desees */
+.nav .perfil-link {
+  font-weight: bold;
+  color: #333;
+}
+
+.nav .perfil-link:hover {
+  color: #007bff;
 }
 
 .star-rating {
