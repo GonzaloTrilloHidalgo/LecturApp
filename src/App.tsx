@@ -680,15 +680,6 @@ function App() {
       document.body.classList.remove('modo-oscuro');
     }
   }, [modoOscuro]);
-  useEffect(() => {
-    if (mensaje) {
-      const timer = setTimeout(() => {
-        setMensaje('');
-      }, 3000); // 3 segundos
-
-      return () => clearTimeout(timer); // limpieza
-    }
-  }, [mensaje]);
 
   // PrivateRoute: Ruta protegida que solo permite el acceso si el usuario está logueado
   const PrivateRoute = ({ element }: { element: JSX.Element }) => {
